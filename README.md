@@ -11,6 +11,8 @@ Public metadata for the proposed `io.github.hardtab/supercheap-shopping` entry, 
 
 Metadata and a manual publisher are prepared. Registry publication and authenticated client acceptance are not yet confirmed. This repository contains no server implementation, customer data, reviewer fixtures or long-lived credentials.
 
+The workflow's exact read-only readiness and OAuth preflight passed on 1 October 2026 at 03:14 UTC: both protected MCP aliases, the customer-only scope set, authorization-code/refresh grants and PKCE S256. The live release header still identified `52fa21a116dbffd00f2229bec71aba20b5bc022a`; the newer CIMD release was awaiting main CI. This check proves public endpoint metadata, not authenticated client acceptance or Registry publication. Repeat it after the new release is accepted before publishing.
+
 ## Protected publication
 
 Environment configuration was verified on 1 October 2026: required human reviewer, exactly the `main` branch allowed, and administrator bypass disabled. Publication has not been dispatched. Configuration must be checked again before the exact run is approved.
