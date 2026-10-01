@@ -280,6 +280,11 @@ jobs:
           mkdir -m 700 "$stage/.config"
           install -m 555 "$publisher" "$stage/mcp-publisher"
           install -m 444 "$manifest" "$stage/server.json"
+          runner_ca_bundle="/etc/ssl/certs/ca-certificates.crt"
+          if [[ ! -r "$runner_ca_bundle" || ! -s "$runner_ca_bundle" ]]; then
+            echo "::error::GitHub-hosted runner system CA bundle is missing, unreadable, or empty; stopping before Registry OIDC login."
+            exit 1
+          fi
           docker run --rm \
             --read-only \
             --cap-drop=ALL \
@@ -288,6 +293,8 @@ jobs:
             --tmpfs /tmp:rw,nosuid,nodev,noexec,size=16m \
             --workdir /tmp \
             --mount "type=bind,src=$stage,dst=/root,readonly" \
+            --mount "type=bind,src=$runner_ca_bundle,dst=/etc/ssl/certs/ca-certificates.crt,readonly" \
+            --env SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
             --env ACTIONS_ID_TOKEN_REQUEST_URL \
             --env ACTIONS_ID_TOKEN_REQUEST_TOKEN \
             --entrypoint /bin/sh \
