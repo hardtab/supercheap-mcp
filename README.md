@@ -9,13 +9,13 @@ Public metadata for the proposed `io.github.hardtab/supercheap-shopping` entry, 
 
 ## Status
 
-Metadata and a manual publisher are prepared. Registry publication and authenticated client acceptance are not yet confirmed. This repository contains no server implementation, customer data, reviewer fixtures or long-lived credentials.
+Metadata and a manual publisher are prepared. The first protected publication run is waiting for human approval. Registry publication and authenticated client acceptance are not yet confirmed. This repository contains no server implementation, customer data, reviewer fixtures or long-lived credentials.
 
-The workflow's exact read-only readiness and OAuth preflight passed on 1 October 2026 at 03:14 UTC: both protected MCP aliases, the customer-only scope set, authorization-code/refresh grants and PKCE S256. The live release header still identified `52fa21a116dbffd00f2229bec71aba20b5bc022a`; the newer CIMD release was awaiting main CI. This check proves public endpoint metadata, not authenticated client acceptance or Registry publication. Repeat it after the new release is accepted before publishing.
+On 1 October 2026, Backend release `2fc707d63d67177f3c8ff9b52ab5012677fa7d57` was deployed and accepted by [main CI](https://github.com/hardtab/supercheap-backend/actions/runs/36806943701). Public readiness returned HTTP 200 with that release and digest `sha256:c3a07b373e71a3e5aefda980b473b395795644dd8f5b11fd788f72b8432c8cd6`; OAuth metadata advertises CIMD support. The exact read-only publisher preflight passed again after acceptance. [Production audit](https://github.com/hardtab/supercheap-backend/actions/runs/36811167290) passed and confirmed the existing 30 September lifecycle aggregate survived container replacement, with valid daily and TTL indexes. These checks establish runtime and public metadata readiness; authenticated client acceptance remains unverified.
 
 ## Protected publication
 
-Environment configuration was verified on 1 October 2026: required human reviewer, exactly the `main` branch allowed, and administrator bypass disabled. Publication has not been dispatched. Configuration must be checked again before the exact run is approved.
+Environment configuration was verified on 1 October 2026: required human reviewer, exactly the `main` branch allowed, and administrator bypass disabled. [Publication run 36811212516](https://github.com/hardtab/supercheap-mcp/actions/runs/36811212516) was dispatched from exact metadata revision `7caa540794754e83afccb4767207da994d79c42a` and is waiting for human review. The manifest and workflow in this README update remain unchanged. Configuration must be checked again before the exact run is approved.
 
 The workflow runs only by manual dispatch from `main` in this exact repository, with `confirm_publish=true`. Configure the `mcp-registry-publish` environment with a required human reviewer, disable administrator bypass in its settings, and allow exactly the `main` branch. The reviewer must inspect the exact run, manifest and workflow before approval. Automation must never approve or bypass its own deployment. A sole owner may manually approve their own dispatch; independent-review prevention is optional additional protection.
 
