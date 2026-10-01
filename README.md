@@ -29,3 +29,5 @@ After publication, the workflow verifies the final official HTTPS Registry origi
 
 - `server.json`: proposed public Registry manifest.
 - `.github/workflows/mcp-registry-publish.yml`: protected manual publisher, not triggered by pushes or pull requests.
+
+- `.github/workflows/mcp-registry-validate.yml`: manual validation using the same publisher, container and CA bundle, with read-only repository permissions and no OIDC login or publication. Run this before retrying protected publication.
