@@ -1,0 +1,339 @@
+name: Publish SuperCheap to Official MCP Registry
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_publish:
+        description: Confirm publication of io.github.hardtab/supercheap-shopping 0.1.0
+        required: true
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: official-mcp-registry-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'hardtab/supercheap-mcp' && github.ref == 'refs/heads/main' && inputs.confirm_publish == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: mcp-registry-publish
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    steps:
+      - name: Verify the protected publication environment
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          API = "https://api.github.com/repos/hardtab/supercheap-mcp/environments/mcp-registry-publish"
+          TOKEN = os.environ.get("GH_TOKEN")
+          if not TOKEN:
+              raise SystemExit("Cannot verify the publication environment: GitHub Actions token is unavailable.")
+
+          def get_json(url):
+              request = urllib.request.Request(
+                  url,
+                  headers={
+                      "Accept": "application/vnd.github+json",
+                      "Authorization": f"Bearer {TOKEN}",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                  },
+              )
+              try:
+                  with urllib.request.urlopen(request, timeout=20) as response:
+                      if response.status != 200:
+                          raise RuntimeError
+                      payload = json.loads(response.read(256_000))
+              except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, RuntimeError) as error:
+                  raise SystemExit("Cannot verify the publication environment; stopping before Registry OIDC login.") from error
+              if not isinstance(payload, dict):
+                  raise SystemExit("GitHub returned unexpected environment metadata; stopping before Registry OIDC login.")
+              return payload
+
+          environment = get_json(API)
+          if environment.get("name") != "mcp-registry-publish":
+              raise SystemExit("The protected publication environment is missing or has an unexpected name.")
+
+          rules = environment.get("protection_rules")
+          has_required_reviewer = (
+              isinstance(rules, list)
+              and any(
+                  isinstance(rule, dict)
+                  and rule.get("type") == "required_reviewers"
+                  and isinstance(rule.get("reviewers"), list)
+                  and len(rule["reviewers"]) > 0
+                  for rule in rules
+              )
+          )
+          if not has_required_reviewer:
+              raise SystemExit("The publication environment has no required reviewer; stopping before Registry OIDC login.")
+
+          branch_policy = environment.get("deployment_branch_policy")
+          if (
+              not isinstance(branch_policy, dict)
+              or branch_policy.get("protected_branches") is not False
+              or branch_policy.get("custom_branch_policies") is not True
+          ):
+              raise SystemExit("The publication environment is not restricted to an explicit branch allowlist.")
+
+          policies_url = API + "/deployment-branch-policies?per_page=100"
+          policy_response = get_json(policies_url)
+          policies = policy_response.get("branch_policies")
+          if (
+              not isinstance(policies, list)
+              or policy_response.get("total_count") != 1
+              or len(policies) != 1
+              or not isinstance(policies[0], dict)
+              or policies[0].get("type") != "branch"
+              or policies[0].get("name") != "main"
+          ):
+              raise SystemExit("The publication environment must allow only the main branch, explicitly as a branch, and no tags or other patterns.")
+
+          print("Protected publication environment verified: required reviewer configured and main is the only allowed branch.")
+          PY
+
+      - name: Check out the selected main revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Check live readiness and customer OAuth boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import re
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          BASE = "https://supercheap.market"
+          ALLOWED_HOSTS = {"supercheap.market", "api.supercheap.market"}
+          EXPECTED_SCOPES = sorted([
+              "catalog:read",
+              "cart:read",
+              "cart:write",
+              "checkout:read",
+              "checkout:write",
+              "orders:read",
+              "orders:write",
+              "profile:read",
+              "profile:write",
+              "support:read",
+              "support:write",
+          ])
+
+          def get(url, expected_status):
+              request = urllib.request.Request(
+                  url,
+                  headers={"Accept": "application/json", "User-Agent": "SuperCheap-Registry-Preflight"},
+              )
+              try:
+                  response = urllib.request.urlopen(request, timeout=20)
+              except urllib.error.HTTPError as error:
+                  response = error
+              with response:
+                  if response.status != expected_status:
+                      raise RuntimeError(
+                          f"Unexpected HTTP {response.status} for {urllib.parse.urlsplit(url).path}; "
+                          f"expected {expected_status}"
+                      )
+                  final = urllib.parse.urlsplit(response.geturl())
+                  if final.scheme != "https" or final.hostname not in ALLOWED_HOSTS:
+                      raise RuntimeError("A public SuperCheap endpoint redirected outside the approved HTTPS hosts")
+                  return response.read(256_000), response.headers
+
+          def json_get(url):
+              body, _ = get(url, 200)
+              try:
+                  value = json.loads(body)
+              except json.JSONDecodeError as error:
+                  raise RuntimeError("A public metadata endpoint did not return JSON") from error
+              if not isinstance(value, dict):
+                  raise RuntimeError("A public metadata endpoint returned an unexpected JSON value")
+              return value
+
+          ready = json_get(f"{BASE}/api/v1/health/ready")
+          if ready.get("status") != "ok":
+              raise RuntimeError("SuperCheap production readiness is not ok")
+
+          expected_metadata_path = "/.well-known/oauth-protected-resource/api/v1/mcp"
+          challenges = []
+          for path in ("/mcp", "/api/v1/mcp"):
+              _, headers = get(f"{BASE}{path}", 401)
+              challenge = headers.get("WWW-Authenticate", "")
+              match = re.search(r'resource_metadata="([^"]+)"', challenge)
+              if not match:
+                  raise RuntimeError(f"The unauthenticated MCP challenge at {path} omitted resource_metadata")
+              metadata_url = urllib.parse.urlsplit(match.group(1))
+              if (
+                  metadata_url.scheme != "https"
+                  or metadata_url.hostname not in ALLOWED_HOSTS
+                  or metadata_url.path != expected_metadata_path
+                  or metadata_url.query
+                  or metadata_url.fragment
+              ):
+                  raise RuntimeError(f"The unauthenticated MCP challenge at {path} pointed to an unexpected metadata URL")
+              challenges.append(match.group(1))
+          if challenges[0] != challenges[1]:
+              raise RuntimeError("The MCP aliases did not advertise the same OAuth resource metadata")
+
+          protected = json_get(challenges[0])
+          scopes = protected.get("scopes_supported")
+          if not isinstance(scopes, list) or sorted(scopes) != EXPECTED_SCOPES or len(scopes) != len(set(scopes)):
+              raise RuntimeError("Protected-resource metadata did not advertise exactly the customer MCP scopes")
+          if any(not isinstance(scope, str) or scope.startswith("staff:") for scope in scopes):
+              raise RuntimeError("Protected-resource metadata exposed a staff scope")
+
+          authorization_servers = protected.get("authorization_servers")
+          if not isinstance(authorization_servers, list) or len(authorization_servers) != 1:
+              raise RuntimeError("Protected-resource metadata did not provide one authorization server")
+          authorization_origin = authorization_servers[0]
+          origin = urllib.parse.urlsplit(authorization_origin)
+          if (
+              origin.scheme != "https"
+              or origin.hostname not in ALLOWED_HOSTS
+              or origin.path not in ("", "/")
+              or origin.query
+              or origin.fragment
+          ):
+              raise RuntimeError("Protected-resource metadata advertised an unexpected authorization server")
+          expected_resource = f"{authorization_origin.rstrip('/')}/api/v1/mcp"
+          if protected.get("resource") != expected_resource:
+              raise RuntimeError("Protected-resource metadata did not describe the canonical MCP resource")
+
+          authorization = json_get(f"{authorization_origin.rstrip('/')}/.well-known/oauth-authorization-server")
+          authorization_scopes = authorization.get("scopes_supported")
+          if (
+              not isinstance(authorization_scopes, list)
+              or sorted(authorization_scopes) != EXPECTED_SCOPES
+              or len(authorization_scopes) != len(set(authorization_scopes))
+          ):
+              raise RuntimeError("Authorization-server metadata did not advertise exactly the customer MCP scopes")
+          if not {"authorization_code", "refresh_token"}.issubset(set(authorization.get("grant_types_supported", []))):
+              raise RuntimeError("Authorization-server metadata omitted a supported customer OAuth grant")
+          if "S256" not in authorization.get("code_challenge_methods_supported", []):
+              raise RuntimeError("Authorization-server metadata omitted PKCE S256")
+
+          print("Live readiness, OAuth metadata, customer-only scopes, and protected MCP aliases passed.")
+          PY
+
+      - name: Download and verify pinned Registry publisher
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/mcp-publisher-v1.8.1-linux-amd64.tar.gz"
+          curl --fail --location --silent --show-error --retry 3 \
+            "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz" \
+            --output "$archive"
+          printf '%s  %s\n' \
+            'a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc' \
+            "$archive" | sha256sum --check --status
+          mkdir -m 700 "$RUNNER_TEMP/mcp-publisher-bin"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/mcp-publisher-bin" mcp-publisher
+          chmod 700 "$RUNNER_TEMP/mcp-publisher-bin/mcp-publisher"
+          "$RUNNER_TEMP/mcp-publisher-bin/mcp-publisher" --version
+
+      - name: Validate, authenticate with OIDC, publish, and verify exact version
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          trap 'rm -rf -- "$RUNNER_TEMP/mcp-publisher-bin" "$RUNNER_TEMP/mcp-publisher-stage" "$RUNNER_TEMP/mcp-publisher-v1.8.1-linux-amd64.tar.gz" "$RUNNER_TEMP/mcp-registry-server-detail.json"' EXIT
+
+          publisher="$RUNNER_TEMP/mcp-publisher-bin/mcp-publisher"
+          manifest="$GITHUB_WORKSPACE/server.json"
+          stage="$RUNNER_TEMP/mcp-publisher-stage"
+          server_name="io.github.hardtab/supercheap-shopping"
+          title="SuperCheap"
+          version="0.1.0"
+          remote_url="https://supercheap.market/mcp"
+
+          jq --exit-status \
+            --arg name "$server_name" \
+            --arg title "$title" \
+            --arg version "$version" \
+            --arg remote "$remote_url" \
+            '.name == $name and .title == $title and .version == $version and (.remotes | length) == 1 and .remotes[0].type == "streamable-http" and .remotes[0].url == $remote and (.packages | not)' \
+            "$manifest" >/dev/null
+          # These staged files are public artifacts, not credentials. Hosted-runner
+          # files belong to a non-root UID; container root with cap-drop=ALL
+          # needs ordinary read/execute permission on this read-only mount.
+          mkdir -m 755 "$stage"
+          mkdir -m 700 "$stage/.config"
+          install -m 555 "$publisher" "$stage/mcp-publisher"
+          install -m 444 "$manifest" "$stage/server.json"
+          docker run --rm \
+            --read-only \
+            --cap-drop=ALL \
+            --security-opt=no-new-privileges:true \
+            --tmpfs /root/.config:rw,nosuid,nodev,noexec,size=1m,mode=700 \
+            --tmpfs /tmp:rw,nosuid,nodev,noexec,size=16m \
+            --workdir /tmp \
+            --mount "type=bind,src=$stage,dst=/root,readonly" \
+            --env ACTIONS_ID_TOKEN_REQUEST_URL \
+            --env ACTIONS_ID_TOKEN_REQUEST_TOKEN \
+            --entrypoint /bin/sh \
+            node:24.21.0-bookworm-slim@sha256:5cbc7caba8c2c0f0bca675d1b61b9f2857e1cf1853c6164ee9dd409501a936e7 \
+            -c 'set -eu; /root/mcp-publisher validate /root/server.json; /root/mcp-publisher login github-oidc; /root/mcp-publisher publish /root/server.json'
+
+          server_name_encoded="io.github.hardtab%2Fsupercheap-shopping"
+          registry_detail="$RUNNER_TEMP/mcp-registry-server-detail.json"
+          registry_url="https://registry.modelcontextprotocol.io/v0.1/servers/${server_name_encoded}/versions/${version}"
+          registry_effective_url="$(curl --fail --location --silent --show-error --retry 3 \
+            --proto '=https' --proto-redir '=https' \
+            "$registry_url" --output "$registry_detail" --write-out '%{url_effective}')"
+          python3 - "$registry_url" "$registry_effective_url" <<'PY'
+          import sys
+          import urllib.parse
+
+          expected = urllib.parse.urlsplit(sys.argv[1])
+          actual = urllib.parse.urlsplit(sys.argv[2])
+          if (
+              actual.scheme != "https"
+              or actual.hostname != "registry.modelcontextprotocol.io"
+              or actual.port not in (None, 443)
+              or actual.username is not None
+              or actual.password is not None
+              or urllib.parse.unquote(actual.path) != urllib.parse.unquote(expected.path)
+              or actual.query
+              or actual.fragment
+          ):
+              raise SystemExit("Registry lookup did not finish at the exact official HTTPS version endpoint.")
+          print("Official Registry lookup origin and exact version path verified.")
+          PY
+          jq --exit-status \
+            --arg name "$server_name" \
+            --arg version "$version" \
+            --arg remote "$remote_url" \
+            '.server.name == $name and .server.version == $version and .server.title == "SuperCheap" and .server.websiteUrl == "https://supercheap.market/" and .server.remotes == [{type: "streamable-http", url: $remote}] and (.server.packages | not)' \
+            "$registry_detail" >/dev/null
+          printf 'Verified Official MCP Registry listing %s version %s.\n' "$server_name" "$version"
+
+      - name: Remove temporary Registry publisher data
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf -- \
+            "$RUNNER_TEMP/mcp-publisher-bin" \
+            "$RUNNER_TEMP/mcp-publisher-stage" \
+            "$RUNNER_TEMP/mcp-publisher-v1.8.1-linux-amd64.tar.gz" \
+            "$RUNNER_TEMP/mcp-registry-server-detail.json"

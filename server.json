@@ -1,0 +1,14 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.hardtab/supercheap-shopping",
+  "title": "SuperCheap",
+  "description": "Search products, manage a customer cart, and request current checkout quotes.",
+  "version": "0.1.0",
+  "websiteUrl": "https://supercheap.market/",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://supercheap.market/mcp"
+    }
+  ]
+}
