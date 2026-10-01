@@ -13,6 +13,8 @@ Metadata and a manual publisher are prepared. Registry publication and authentic
 
 ## Protected publication
 
+Environment configuration was verified on 1 October 2026: required human reviewer, exactly the `main` branch allowed, and administrator bypass disabled. Publication has not been dispatched. Configuration must be checked again before the exact run is approved.
+
 The workflow runs only by manual dispatch from `main` in this exact repository, with `confirm_publish=true`. Configure the `mcp-registry-publish` environment with a required human reviewer, disable administrator bypass in its settings, and allow exactly the `main` branch. The reviewer must inspect the exact run, manifest and workflow before approval. Automation must never approve or bypass its own deployment. A sole owner may manually approve their own dispatch; independent-review prevention is optional additional protection.
 
 Review changes through pull requests before merging to `main`. The GitHub OIDC publisher permission covers `io.github.hardtab/*`, so the exact repository, branch, manifest and approval controls are significant.
