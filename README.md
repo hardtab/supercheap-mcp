@@ -15,12 +15,13 @@ On 1 October 2026, Backend release `2fc707d63d67177f3c8ff9b52ab5012677fa7d57` wa
 
 ## Directory listings
 
-Directory evidence verified on 2 October 2026:
+Directory evidence verified on 2–3 October 2026:
 
 - [Smithery](https://smithery.ai/servers/hardtab/supercheap-shopping) — authenticated scan completed successfully on 1 October 2026 and reports 33 tools.
-- [Glama](https://glama.ai/mcp/connectors/io.github.hardtab/supercheap-shopping) — ownership verified, listed as Healthy with 33 tools; card found via remote connector search.
+- [Glama](https://glama.ai/mcp/connectors/io.github.hardtab/supercheap-shopping) — Connected on 3 October 2026 after PR 26; Inspector shows 33 tools. `market_list` (TH/THB and US/USD, checkout-enabled), `catalog_search_products` (US/en shoulder bag, limit 3, expand suppliers false → 3 of 5), and `catalog_get_product` (existing fixture with variants) called successfully.
+- [mcpi](https://mcpi.app/servers/supercheap) — card imported from the root endpoint `https://supercheap.market/mcp` and public OAuth metadata; owner claim and contract snapshot pending.
 
-These checks confirm authenticated protocol connection and tool discovery. Authenticated buyer tool calls, cart, checkout, refresh, and revocation remain unverified in these directories.
+Glama confirms authenticated tool discovery and bounded catalog reads. Cart, checkout, refresh, revoke, and other clients remain unverified. [PR 26](https://github.com/hardtab/supercheap-backend/pull/26) (merged `979aaad`) and [PR 27](https://github.com/hardtab/supercheap-backend/pull/27) (ledger `f073`) record production deployment and live evidence.
 
 ## Protected publication
 
