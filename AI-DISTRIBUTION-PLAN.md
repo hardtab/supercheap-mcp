@@ -212,8 +212,8 @@ Claude Directory существует; портал подачи доступе�
 - **Количество инструментов:** 33 (на 3 октября 2026)
 
 ### OAuth
-- **Authorization endpoint:** `https://supercheap.market/mcp/oauth/authorize`
-- **Token endpoint:** `https://supercheap.market/mcp/oauth/token`
+- **Authorization endpoint:** `https://supercheap.market/api/v1/mcp/oauth/authorize`
+- **Token endpoint:** `https://supercheap.market/api/v1/mcp/oauth/token`
 - **Metadata:** `https://supercheap.market/.well-known/oauth-protected-resource`
 - **Grant types:** `authorization_code`, `refresh_token`
 - **Стандартно запрашиваемые scopes:** `catalog:read cart:read cart:write checkout:read checkout:write profile:read profile:write`
