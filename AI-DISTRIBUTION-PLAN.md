@@ -13,9 +13,10 @@ Codex и др.) через все основные MCP-директории и �
 | **Official MCP Registry** | ✅ Published | `io.github.hardtab/supercheap-shopping`, версия 0.1.0, Streamable HTTP. [Ссылка](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.hardtab%2Fsupercheap-shopping/versions/0.1.0) |
 | **Smithery** | ✅ Listed | [hardtab/supercheap-shopping](https://smithery.ai/servers/hardtab/supercheap-shopping). 33 tools, authenticated scan OK. |
 | **Glama** | ✅ Listed | [io.github.hardtab/supercheap-shopping](https://glama.ai/mcp/connectors/io.github.hardtab/supercheap-shopping). Healthy, 33 tools. |
-| **Arcade.dev** | 🔲 Pending | Директория Arcade.dev — целевой канал для добавления. |
-| **OpenAI ChatGPT Plugin Directory** | 🔲 Pending | Нужна публикация через OpenAI Developer Platform. |
-| **Claude / Anthropic MCP Directory** | 🔲 Pending | Ожидается появление публичного каталога MCP-серверов. |
+| **MCPI** | ✅ Imported | [mcpi.app/servers/supercheap](https://mcpi.app/servers/supercheap). Claim owner pending email verification; карточка не подтверждает ownership. |
+| **Arcade.dev** | 🔲 Research | Исследуется возможность партнёрского онбординга. |
+| **OpenAI ChatGPT Plugin Directory** | 🔲 Подача готовится | 8 кейсов, видео, ZIP-пакет — публикация через platform.openai.com. |
+| **Claude / Anthropic MCP Directory** | 🔲 Pending | Канал существует. Платные планы Claude поддерживают Remote MCP. |
 | **Agentic Commerce Feeds** | 🔲 Pending | Amazon, Google Shopping, другие AI-шопинг-фиды. |
 
 ---
@@ -84,9 +85,9 @@ environment `mcp-registry-publish`).
 
 **Известные проблемы:**
 1. ~~Glama не может найти OAuth metadata endpoint — **FIXED**~~ (добавлены alias-пути)
-2. `invalid_scope` при OAuth-авторизации — **не исправлено.** Glama (и другие MCP-инспекторы) запрашивает `offline_access` при получении токена. Сервер не включает `offline_access` в разрешённые scope. Нужно либо:
-   - Добавить `offline_access` в `CUSTOMER_MCP_SCOPES` и `STAFF_MCP_SCOPES` (безопасно — это no-op scope)
-   - Либо настроить игнорирование неизвестных scope
+2. ~~`invalid_scope` при OAuth-авторизации — **FIXED**~~ (`offline_access` добавлен в allowlist scopes, PR #26 merged & deployed)
+3. **OAuth flow — проверена частично:** Authenticated initialize, tools, catalog — ✅ здоров. Cart, checkout, refresh, revoke — ⏳ ещё не проверены.
+4. **Dedicated reviewer / client cases** — ⏳ Нужен отдельный тестовый аккаунт с демонстрационными данными; восемь сценариев определены, но их фактическое выполнение ещё не подтверждено.
 
 **Процесс регистрации:**
 1. Зайти на glama.ai через GitHub (аккаунт bleshik)
@@ -96,71 +97,78 @@ environment `mcp-registry-publish`).
 
 ---
 
-### 2.4 Arcade.dev
+### 2.4 MCPI
 
-**Статус:** 🔲 Запланировано
+**Статус:** ✅ Imported
+
+**URL:** https://mcpi.app/servers/supercheap
+
+**Примечание:** Карточка сервера импортирована. Claim owner — ожидает верификацию email. Наличие карточки само по себе не подтверждает ownership.
+
+**Ссылки:**
+- [Карточка на MCPI](https://mcpi.app/servers/supercheap)
+
+---
+
+### 2.5 Arcade.dev
+
+**Статус:** 🔲 Research
 
 **URL:** https://arcade.dev
 
-**Аккаунт:** Пока не создан. GitHub OAuth или email.
-
 **Ссылки:**
 - [Главная](https://arcade.dev)
-- [Документация по добавлению](https://arcade.dev/docs) (проверить раздел MCP)
 
-**Действия:**
-1. Создать аккаунт на arcade.dev (рекомендуется через GitHub bleshik)
-2. Найти раздел добавления MCP-сервера
-3. Добавить SuperCheap MCP:
-   - Name: `io.github.hardtab/supercheap-shopping`
-   - URL: `https://supercheap.market/mcp`
-   - Description: копия из `server.json`
-4. Проверить, что Arcade сканирует сервер и видит все 33 инструмента
+**Заметка:** Способ включения SuperCheap в Arcade ещё не подтверждён. Подготовлено направление партнёрского обращения; регистрацию и наличие универсального Add MCP server нельзя считать проверенными.
 
 ---
 
-### 2.5 OpenAI ChatGPT Plugin Directory
+### 2.6 OpenAI ChatGPT Plugin Directory
 
-**Статус:** 🔲 Запланировано
+**Статус:** 🔲 Подача готовится
 
-**URL:** https://developers.openai.com/docs/plugins
+**URL:** https://developers.openai.com/plugins/deploy/submission
+**Submission:** https://platform.openai.com/plugins
 
 **Ссылки:**
-- [Документация по плагинам](https://developers.openai.com/docs/plugins)
-- [Submit plugins — OpenAI Developers](https://platform.openai.com/plugins)
-- [Plugin review guidelines](https://platform.openai.com/docs/plugins/review)
+- [Официальная документация по публикации](https://developers.openai.com/plugins/deploy/submission) (сверено 3 октября 2026)
+- [Submission portal](https://platform.openai.com/plugins)
 
-**Что нужно сделать:**
-1. Подготовить ChatGPT plugin manifest:
-   - Публичный endpoint: `https://supercheap.market/openai-plugin.json`
-   - Manifest с description для AI, supported tools, auth type (OAuth)
-2. Зарегистрироваться на platform.openai.com
-3. Пройти review process (ручное модерация OpenAI)
-4. После одобрения плагин становится доступен в ChatGPT через Plugin Discovery
+**Требования OpenAI для публикации:**
+1. **Пакет:** ZIP-архив, содержащий `plugin.json` + `mcp.json` + иконку. Подготовлен в backend integrations.
+2. **Publisher identity:** Подтверждённая личность разработчика и отдельный аккаунт для dedicated reviewer.
+3. **Кейсы для ревью:** 8 реальных пользовательских случаев (5 положительных, 3 отрицательных) + видео, демонстрирующее работу.
+4. **Загрузка:** Через портал `https://platform.openai.com/plugins`.
+5. **Процесс:** Сначала автоматическое сканирование (проверка пакета), затем ручное ревью, затем отдельная публикация.
 
-**Важно:** ChatGPT plugin discovery — один из самых мощных каналов (судя по
-данным Tibo, обнаруживаемость плагинов ведёт к массовому adoption).
+**Примечания:**
+- Открытый endpoint `openai-plugin.json` не требуется.
+- Структура пакета валидирована.
 
-**Статус подачи:** Не начато. Нужен первичный манифест.
-
----
-
-### 2.6 Claude / Anthropic MCP Directory
-
-**Статус:** 🔲 Ожидание
-
-На данный момент у Anthropic нет публичного каталога MCP-серверов, аналогичного
-MCP Registry или Smithery. Есть:
-- Примеры в [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) репозитории — можно предложить PR
-- Рекомендации в документации Claude
-
-Возможные действия:
-1. Следить за [github.com/modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) — можно добавить SuperCheap в список сторонних серверов
-2. Когда Anthropic запустит официальный каталог — подать заявку
+**Статус подачи:** Кейсы (8 шт.) готовятся к загрузке, публикация не произведена. Ожидается завершение подготовки кейсов и видео перед отправкой на ревью.
 
 ---
 
-### 2.7 Agentic Commerce Feeds
+### 2.7 Claude / Anthropic MCP Directory
+
+**Статус:** 🔲 Ожидание выбора аккаунта
+
+**URL:** https://claude.ai/directory/manage/new
+
+**Источник:** https://claude.com/blog/build-plugins-for-claude
+
+Claude Directory существует; портал подачи доступен разработчикам на платных планах Claude. Согласно [официальному объявлению](https://claude.com/blog/build-plugins-for-claude), доступны два пути:
+- **Remote MCP Connector** — публичный Streamable HTTP сервер (подходит наш `https://supercheap.market/mcp`)
+- **Plugin Bundle** — пакет MCP и skills, размещённый на GitHub; в портал подаётся репозиторий
+
+**Статус подачи:** Не начато. Платный аккаунт для подачи ещё должен выбрать владелец; покупка тарифа не выполнялась. Нужно:
+1. Войти на claude.ai/directory/manage/new под аккаунтом с платным планом Claude
+2. Подать Remote MCP Connector
+3. Дождаться модерации
+
+---
+
+### 2.8 Agentic Commerce Feeds
 
 **Статус:** 🔲 Запланировано к исследованию
 
@@ -181,15 +189,16 @@ MCP Registry или Smithery. Есть:
 | **Official MCP Registry** | GitHub hardtab | GitHub Actions OIDC (ID token) | Опубликовано. Environment `mcp-registry-publish` в hardtab/supercheap-mcp |
 | **Smithery** | GitHub bleshik | GitHub OAuth | Зарегистрировано. Вход через smithery.ai |
 | **Glama** | GitHub bleshik | GitHub OAuth | Зарегистрировано. Вход через glama.ai |
-| **Arcade.dev** | GitHub bleshik | GitHub OAuth (предположительно) | Не создан. Нужно зарегистрироваться |
-| **OpenAI Platform** | hardtab LLC account | Email + пароль | Не создан для плагинов. Использовать корпоративный email |
-| **GitHub (все площадки)** | bleshik | Personal access token | PAT с нужными scope лежит в secrets GitHub |
+| **MCPI** | — | Email | Карточка импортирована. Owner claim pending email verification. |
+| **Arcade.dev** | — | — | Исследуется возможность партнёрского онбординга. |
+| **OpenAI Platform** | Издатель HARD TAB LLC — требует проверки | Способ входа выбирает владелец | Подтвердить организацию, verified developer identity и рабочий email перед подачей |
+| **GitHub** | bleshik / организация hardtab | Существующий вход в браузере или gh CLI | Не помещать токены в план; Registry использует отдельный Actions OIDC |
 | **MCP Registry CLI** | Registry OIDC | OIDC через GitHub Actions | Используется в publish workflow. Не требует ручного токена |
 
 **Где хранятся credentials:**
 - GitHub Secrets: `Settings → Secrets and variables → Actions` в каждом репозитории
 - MCP Registry environment: `Settings → Environments → mcp-registry-publish`
-- Для OpenAI потребуется отдельный аккаунт разработчика и API key
+- Для OpenAI подтвердить нужную организацию и verified developer identity; секреты и reviewer credentials хранить вне публичного пакета
 
 ---
 
@@ -203,8 +212,8 @@ MCP Registry или Smithery. Есть:
 - **Количество инструментов:** 33 (на 3 октября 2026)
 
 ### OAuth
-- **Authorization endpoint:** `https://supercheap.market/mcp/oauth/authorize`
-- **Token endpoint:** `https://supercheap.market/mcp/oauth/token`
+- **Authorization endpoint:** `https://supercheap.market/api/v1/mcp/oauth/authorize`
+- **Token endpoint:** `https://supercheap.market/api/v1/mcp/oauth/token`
 - **Metadata:** `https://supercheap.market/.well-known/oauth-protected-resource`
 - **Grant types:** `authorization_code`, `refresh_token`
 - **Стандартно запрашиваемые scopes:** `catalog:read cart:read cart:write checkout:read checkout:write profile:read profile:write`
@@ -220,13 +229,13 @@ MCP Registry или Smithery. Есть:
 ## 5. Очередь работ (priority)
 
 ### P0 — Исправить проблемы, блокирующие работу
-- [ ] Добавить `offline_access` в allowlist scopes (supercheap-backend: `mcp-access-token.ts`)
-- [ ] Дождаться CI по PR #26 (glama discovery fix), вмержить и задеплоить
-- [ ] Проверить, что Glama OAuth работает после обоих фиксов
+- [x] Добавить `offline_access` в allowlist scopes (supercheap-backend: `mcp-access-token.ts`)
+- [x] PR #26 merged & deployed — invalid_scope / offline_access fix
+- [ ] Получить dedicated reviewer / подготовить клиентские кейсы (8 шт.) для публикации
 
 ### P1 — Расширить присутствие в директориях
-- [ ] **Arcade.dev** — зарегистрироваться и добавить карточку
-- [ ] **OpenAI ChatGPT Plugin Directory** — подготовить манифест и подать
+- [ ] **Arcade.dev** — исследовать возможность партнёрского онбординга
+- [ ] **OpenAI ChatGPT Plugin Directory** — завершить кейсы (8 шт.) и подать на ревью
 
 ### P2 — Улучшить обнаруживаемость
 - [ ] **modelcontextprotocol/servers** — PR со списком сторонних серверов
@@ -237,7 +246,7 @@ MCP Registry или Smithery. Есть:
 ## 6. Метрики и мониторинг
 
 Что проверять регулярно:
-1. **Health endpoint:** `curl -sI https://supercheap.market/mcp` — должен быть 200
+1. **Service readiness:** `curl -s https://supercheap.market/api/v1/health/ready` — должен быть 200 для health check. `curl -i https://supercheap.market/mcp` без Authorization — проверен GET 401 (OAuth challenge).
 2. **Инструменты доступны:** Smithery/Glama показывают 33+ tools
 3. **OAuth flow:** Полный цикл авторизации в любом MCP-клиенте
 4. **Registry listing:** Статус `active` и `isLatest=true`
