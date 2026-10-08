@@ -9,19 +9,27 @@ Public metadata for the published `io.github.hardtab/supercheap-shopping` entry,
 
 ## Status
 
-Version `0.1.0` is published in the [Official MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.hardtab%2Fsupercheap-shopping/versions/0.1.0). Independent lookup on 1 October 2026 verified the exact namespace, version, website and Streamable HTTP endpoint; the Registry reports `status=active` and `isLatest=true`, published at `2026-10-01T05:19:07.625706Z`. [Protected publication run 36818380344](https://github.com/hardtab/supercheap-mcp/actions/runs/36818380344) succeeded on metadata revision `a77b0411b1f7516c95654dd7206f7db4b68e7484` after human approval. Authenticated client acceptance remains unverified. This repository contains no server implementation, customer data, reviewer fixtures or long-lived credentials.
+Version `0.1.0` is published in the [Official MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.hardtab%2Fsupercheap-shopping/versions/0.1.0). A direct lookup on 8 October 2026 returned the exact namespace and version with `status=active`, `isLatest=true`, and the Streamable HTTP endpoint `https://supercheap.market/mcp`. This repository contains public Registry metadata and publisher workflows; it contains no server implementation, customer data, reviewer fixtures or long-lived credentials.
 
-On 1 October 2026, Backend release `2fc707d63d67177f3c8ff9b52ab5012677fa7d57` was deployed and accepted by [main CI](https://github.com/hardtab/supercheap-backend/actions/runs/36806943701). Public readiness returned HTTP 200 with that release and digest `sha256:c3a07b373e71a3e5aefda980b473b395795644dd8f5b11fd788f72b8432c8cd6`; OAuth metadata advertises CIMD support. The exact read-only publisher preflight passed again after acceptance. [Production audit](https://github.com/hardtab/supercheap-backend/actions/runs/36811167290) passed and confirmed the existing 30 September lifecycle aggregate survived container replacement, with valid daily and TTL indexes. [Container checks](https://github.com/hardtab/supercheap-backend/actions/runs/36811153235) also passed; the checkout log confirms exact source `2fc707d63d67177f3c8ff9b52ab5012677fa7d57`. These checks establish runtime and public metadata readiness; authenticated client acceptance remains unverified.
+## Backend release evidence — 8 October 2026
 
-## Directory listings
+[Fast release 37712311854](https://github.com/hardtab/supercheap-backend/actions/runs/37712311854) recorded backend acceptance for source `9427574c653d8939101cac7ac3ed6146b5e9a0eb` and image `sha256:5c8c55f13e8da037ee63d0a2ab74470e98359f4bccc13da54388ab094609f365`. The long `quality` and Yandex watcher checks were skipped, so this is not a full-CI pass. A later public readiness request timed out; this dated acceptance record does not establish current runtime health or availability.
 
-Directory evidence verified on 2–3 October 2026:
+## Directory listings and client evidence — 8 October 2026
 
-- [Smithery](https://smithery.ai/servers/hardtab/supercheap-shopping) — authenticated scan completed successfully on 1 October 2026 and reports 33 tools.
-- [Glama](https://glama.ai/mcp/connectors/io.github.hardtab/supercheap-shopping) — Connected on 3 October 2026 after PR 26; Inspector shows 33 tools. `market_list` (TH/THB and US/USD, checkout-enabled), `catalog_search_products` (US/en shoulder bag, limit 3, expand suppliers false → 3 of 5), and `catalog_get_product` (existing fixture with variants) called successfully.
-- [mcpi](https://mcpi.app/servers/supercheap) — card imported from the root endpoint `https://supercheap.market/mcp` and public OAuth metadata; owner claim and contract snapshot pending.
+- [Official MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.hardtab%2Fsupercheap-shopping/versions/0.1.0) — version `0.1.0`, `active` and `isLatest` on the 8 October direct lookup.
+- [mcpservers.org](https://mcpservers.org/servers/hardtab/supercheap-mcp) — public SuperCheap card with the customer OAuth endpoint and Registry metadata.
+- [Smithery](https://smithery.ai/servers/hardtab/supercheap-shopping) — its 7 October authenticated scan succeeded and the listing reports 35 tools. This verifies tool discovery, not the full buyer checkout.
+- [Glama](https://glama.ai/mcp/connectors/io.github.hardtab/supercheap-shopping) — the public listing reports 35 tools. In an Inspector test on 8 October, a selected-line quote and `checkout_prepare_payment` succeeded while an unselected cart line remained. No order, Stripe payment link or charge was created. A later Test Profile check at 18:06:29 failed with `OAuth access token has expired`; a refresh-token exchange and a current authenticated SuperCheap Inspector connection are not confirmed.
+- [MCPI](https://mcpi.app/servers/supercheap) — the public card received a 35-tool customer metadata snapshot on 8 October. The temporary publication key was revoked. The snapshot is metadata publication, not buyer acceptance.
 
-Glama confirms authenticated tool discovery and bounded catalog reads. Cart, checkout, refresh, revoke, and other clients remain unverified. [PR 26](https://github.com/hardtab/supercheap-backend/pull/26) (merged `979aaad`) and [PR 27](https://github.com/hardtab/supercheap-backend/pull/27) (ledger `f073`) record production deployment and live evidence.
+Glama's successful Inspector actions establish only the selected-line quote and payment-preparation behavior for that test. They do not establish current OAuth connectivity, refresh, order creation, or Stripe payment-link creation.
+
+## Other directory intake — 8 October 2026
+
+- MCP Market: the existing repository-mode submission receipt confirmed entry into its free queue, but the [public search](https://mcpmarket.com/search?q=SuperCheap) currently has no exact SuperCheap card. Queue position/status has not been independently read since submission. Its current GitHub-repository submission page offers a $0 Free Queue (average 4–6 weeks) and a $29 one-time expedited option. An earlier 7 October observation recorded $69 for the separate Remote MCP mode; that mode was not selected in the 8 October recheck, so its current price is unconfirmed. No payment was made or approved.
+- PulseMCP: the [public search](https://www.pulsemcp.com/servers?q=supercheap) returns no results and says submissions and listing changes are paused. No import of this Registry entry is confirmed.
+- Arcade: an Early Access interest survey was acknowledged; no beta acceptance or public Arcade listing is confirmed.
 
 ## Protected publication
 
