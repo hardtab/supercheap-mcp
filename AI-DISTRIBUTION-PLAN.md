@@ -37,13 +37,13 @@ environment `mcp-registry-publish`).
 
 **Ссылки:**
 - [Репозиторий](https://github.com/hardtab/supercheap-mcp)
-- [Workflow публикации](https://github.com/hardtab/supercheap-mcp/actions/workflows/publish.yml)
+- [Workflow Registry operations](https://github.com/hardtab/supercheap-mcp/actions/workflows/registry-operations.yml)
 - [Environment secrets](https://github.com/hardtab/supercheap-mcp/settings/environments/mcp-registry-publish)
 
 **Что надо для публикации новой версии:**
 1. Обновить `server.json` (version, description при необходимости)
 2. Переключиться на `main`, запушить
-3. Перейти в Actions → `Publish SuperCheap to Official MCP Registry` → Run workflow
+3. Перейти в Actions → `SuperCheap Official MCP Registry operations` → Run workflow; выбрать `operation=publish` и отметить `confirm_publish`
 4. Дождаться human approval в Review deployments
 
 ---

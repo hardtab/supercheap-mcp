@@ -1,8 +1,16 @@
-name: Publish SuperCheap to Official MCP Registry
+name: SuperCheap Official MCP Registry operations
 
 on:
   workflow_dispatch:
     inputs:
+      operation:
+        description: Choose validation (default) or protected Registry publication
+        required: true
+        type: choice
+        options:
+          - validate
+          - publish
+        default: validate
       confirm_publish:
         description: Confirm publication of io.github.hardtab/supercheap-shopping 0.1.0
         required: true
@@ -12,13 +20,135 @@ on:
 permissions: {}
 
 concurrency:
-  group: official-mcp-registry-publish
+  group: official-mcp-registry-operations
   cancel-in-progress: false
 
 jobs:
+  validate:
+    if: github.repository == 'hardtab/supercheap-mcp' && github.ref == 'refs/heads/main' && inputs.operation == 'validate'
+    runs-on: [self-hosted, hardtab-docker-ci]
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the selected main revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Validate with the pinned publisher and trusted host CA bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+
+          archive="$RUNNER_TEMP/mcp-publisher-v1.8.1-linux-amd64.tar.gz"
+          publisher_dir="$RUNNER_TEMP/mcp-registry-publisher-validate"
+          stage="$RUNNER_TEMP/mcp-registry-validate-stage"
+          runner_ca_bundle="$RUNNER_TEMP/mcp-registry-runner-ca-bundle.pem"
+          expected_sha256='a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc'
+          trap 'rm -rf -- "$publisher_dir" "$stage"; rm -f -- "$archive" "$runner_ca_bundle"' EXIT
+
+          verify_sha256() {
+            local expected="$1"
+            local path="$2"
+            local actual
+            if command -v sha256sum >/dev/null 2>&1; then
+              if ! printf '%s  %s\n' "$expected" "$path" | sha256sum --check --status; then
+                echo "::error::The pinned Registry publisher checksum does not match."
+                exit 1
+              fi
+            elif command -v shasum >/dev/null 2>&1; then
+              actual="$(shasum -a 256 "$path" | awk '{print $1}')"
+              if [[ "$actual" != "$expected" ]]; then
+                echo "::error::The pinned Registry publisher checksum does not match."
+                exit 1
+              fi
+            else
+              echo "::error::No supported SHA-256 utility is available on this runner."
+              exit 1
+            fi
+          }
+
+          prepare_host_ca_bundle() {
+            local candidate
+            case "$RUNNER_OS" in
+              Linux)
+                for candidate in \
+                  /etc/ssl/certs/ca-certificates.crt \
+                  /etc/ssl/cert.pem \
+                  /etc/pki/tls/certs/ca-bundle.crt; do
+                  if [[ -r "$candidate" && -s "$candidate" ]]; then
+                    install -m 444 "$candidate" "$runner_ca_bundle"
+                    break
+                  fi
+                done
+                ;;
+              macOS)
+                security find-certificate -a -p \
+                  /System/Library/Keychains/SystemRootCertificates.keychain \
+                  > "$runner_ca_bundle"
+                if [[ -r /Library/Keychains/System.keychain ]]; then
+                  security find-certificate -a -p /Library/Keychains/System.keychain \
+                    >> "$runner_ca_bundle"
+                fi
+                chmod 444 "$runner_ca_bundle"
+                ;;
+              *)
+                echo "::error::Unsupported runner OS for the trusted host CA bundle: $RUNNER_OS"
+                exit 1
+                ;;
+            esac
+            if [[ ! -r "$runner_ca_bundle" || ! -s "$runner_ca_bundle" ]] \
+              || ! grep -q -- '-----BEGIN CERTIFICATE-----' "$runner_ca_bundle"; then
+              echo "::error::The runner's trusted host CA bundle is missing, unreadable, or empty."
+              exit 1
+            fi
+          }
+
+          prepare_host_ca_bundle
+          curl --fail --location --silent --show-error --retry 3 \
+            "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz" \
+            --output "$archive"
+          verify_sha256 "$expected_sha256" "$archive"
+
+          mkdir -m 755 "$publisher_dir" "$stage"
+          mkdir -m 700 "$stage/.config"
+          tar -xzf "$archive" -C "$publisher_dir" mcp-publisher
+          chmod 555 "$publisher_dir/mcp-publisher"
+          install -m 444 "$GITHUB_WORKSPACE/server.json" "$stage/server.json"
+
+          docker run --rm \
+            --platform linux/amd64 \
+            --read-only \
+            --cap-drop=ALL \
+            --security-opt=no-new-privileges:true \
+            --tmpfs /root/.config:rw,nosuid,nodev,noexec,size=1m,mode=700 \
+            --tmpfs /tmp:rw,nosuid,nodev,noexec,size=16m \
+            --workdir /tmp \
+            --mount "type=bind,src=$publisher_dir,dst=/publisher,readonly" \
+            --mount "type=bind,src=$stage,dst=/stage,readonly" \
+            --mount "type=bind,src=$runner_ca_bundle,dst=/etc/ssl/certs/ca-certificates.crt,readonly" \
+            --env SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
+            --entrypoint /bin/sh \
+            node:24.21.0-bookworm-slim@sha256:5cbc7caba8c2c0f0bca675d1b61b9f2857e1cf1853c6164ee9dd409501a936e7 \
+            -c 'set -eu; /publisher/mcp-publisher --version; /publisher/mcp-publisher validate /stage/server.json'
+
+  reject_unconfirmed_publish:
+    if: github.repository == 'hardtab/supercheap-mcp' && github.ref == 'refs/heads/main' && inputs.operation == 'publish' && inputs.confirm_publish != true
+    runs-on: [self-hosted, hardtab-docker-ci]
+    timeout-minutes: 2
+    steps:
+      - name: Require the explicit publication confirmation
+        shell: bash
+        run: |
+          echo "::error::Select confirm_publish=true before requesting protected Registry publication."
+          exit 1
+
   publish:
-    if: github.repository == 'hardtab/supercheap-mcp' && github.ref == 'refs/heads/main' && inputs.confirm_publish == true
-    runs-on: ubuntu-latest
+    if: github.repository == 'hardtab/supercheap-mcp' && github.ref == 'refs/heads/main' && inputs.operation == 'publish' && inputs.confirm_publish == true
+    runs-on: [self-hosted, hardtab-docker-ci]
     timeout-minutes: 10
     environment:
       name: mcp-registry-publish
@@ -37,7 +167,6 @@ jobs:
           import json
           import os
           import urllib.error
-          import urllib.parse
           import urllib.request
 
           API = "https://api.github.com/repos/hardtab/supercheap-mcp/environments/mcp-registry-publish"
@@ -91,8 +220,7 @@ jobs:
           ):
               raise SystemExit("The publication environment is not restricted to an explicit branch allowlist.")
 
-          policies_url = API + "/deployment-branch-policies?per_page=100"
-          policy_response = get_json(policies_url)
+          policy_response = get_json(API + "/deployment-branch-policies?per_page=100")
           policies = policy_response.get("branch_policies")
           if (
               not isinstance(policies, list)
@@ -236,27 +364,94 @@ jobs:
           PY
 
       - name: Download and verify pinned Registry publisher
-        shell: bash
-        run: |
-          set -euo pipefail
-          archive="$RUNNER_TEMP/mcp-publisher-v1.8.1-linux-amd64.tar.gz"
-          curl --fail --location --silent --show-error --retry 3 \
-            "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz" \
-            --output "$archive"
-          printf '%s  %s\n' \
-            'a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc' \
-            "$archive" | sha256sum --check --status
-          mkdir -m 700 "$RUNNER_TEMP/mcp-publisher-bin"
-          tar -xzf "$archive" -C "$RUNNER_TEMP/mcp-publisher-bin" mcp-publisher
-          chmod 700 "$RUNNER_TEMP/mcp-publisher-bin/mcp-publisher"
-          "$RUNNER_TEMP/mcp-publisher-bin/mcp-publisher" --version
-
-      - name: Validate, authenticate with OIDC, publish, and verify exact version
+        id: publisher
         shell: bash
         run: |
           set -euo pipefail
           umask 077
-          trap 'rm -rf -- "$RUNNER_TEMP/mcp-publisher-bin" "$RUNNER_TEMP/mcp-publisher-stage" "$RUNNER_TEMP/mcp-publisher-v1.8.1-linux-amd64.tar.gz" "$RUNNER_TEMP/mcp-registry-server-detail.json"' EXIT
+
+          archive="$RUNNER_TEMP/mcp-publisher-v1.8.1-linux-amd64.tar.gz"
+          publisher_dir="$RUNNER_TEMP/mcp-publisher-bin"
+          runner_ca_bundle="$RUNNER_TEMP/mcp-registry-runner-ca-bundle.pem"
+          expected_sha256='a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc'
+          trap 'rm -f -- "$archive"' EXIT
+
+          verify_sha256() {
+            local expected="$1"
+            local path="$2"
+            local actual
+            if command -v sha256sum >/dev/null 2>&1; then
+              if ! printf '%s  %s\n' "$expected" "$path" | sha256sum --check --status; then
+                echo "::error::The pinned Registry publisher checksum does not match."
+                exit 1
+              fi
+            elif command -v shasum >/dev/null 2>&1; then
+              actual="$(shasum -a 256 "$path" | awk '{print $1}')"
+              if [[ "$actual" != "$expected" ]]; then
+                echo "::error::The pinned Registry publisher checksum does not match."
+                exit 1
+              fi
+            else
+              echo "::error::No supported SHA-256 utility is available on this runner."
+              exit 1
+            fi
+          }
+
+          prepare_host_ca_bundle() {
+            local candidate
+            case "$RUNNER_OS" in
+              Linux)
+                for candidate in \
+                  /etc/ssl/certs/ca-certificates.crt \
+                  /etc/ssl/cert.pem \
+                  /etc/pki/tls/certs/ca-bundle.crt; do
+                  if [[ -r "$candidate" && -s "$candidate" ]]; then
+                    install -m 444 "$candidate" "$runner_ca_bundle"
+                    break
+                  fi
+                done
+                ;;
+              macOS)
+                security find-certificate -a -p \
+                  /System/Library/Keychains/SystemRootCertificates.keychain \
+                  > "$runner_ca_bundle"
+                if [[ -r /Library/Keychains/System.keychain ]]; then
+                  security find-certificate -a -p /Library/Keychains/System.keychain \
+                    >> "$runner_ca_bundle"
+                fi
+                chmod 444 "$runner_ca_bundle"
+                ;;
+              *)
+                echo "::error::Unsupported runner OS for the trusted host CA bundle: $RUNNER_OS"
+                exit 1
+                ;;
+            esac
+            if [[ ! -r "$runner_ca_bundle" || ! -s "$runner_ca_bundle" ]] \
+              || ! grep -q -- '-----BEGIN CERTIFICATE-----' "$runner_ca_bundle"; then
+              echo "::error::The runner's trusted host CA bundle is missing, unreadable, or empty."
+              exit 1
+            fi
+          }
+
+          prepare_host_ca_bundle
+          curl --fail --location --silent --show-error --retry 3 \
+            "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz" \
+            --output "$archive"
+          verify_sha256 "$expected_sha256" "$archive"
+
+          mkdir -m 700 "$publisher_dir"
+          tar -xzf "$archive" -C "$publisher_dir" mcp-publisher
+          chmod 700 "$publisher_dir/mcp-publisher"
+          printf 'runner_ca_bundle=%s\n' "$runner_ca_bundle" >> "$GITHUB_OUTPUT"
+
+      - name: Validate, authenticate with OIDC, publish, and verify exact version
+        shell: bash
+        env:
+          RUNNER_CA_BUNDLE: ${{ steps.publisher.outputs.runner_ca_bundle }}
+        run: |
+          set -euo pipefail
+          umask 077
+          trap 'rm -rf -- "$RUNNER_TEMP/mcp-publisher-bin" "$RUNNER_TEMP/mcp-publisher-stage" "$RUNNER_TEMP/mcp-registry-server-detail.json"; rm -f -- "$RUNNER_TEMP/mcp-registry-runner-ca-bundle.pem"' EXIT
 
           publisher="$RUNNER_TEMP/mcp-publisher-bin/mcp-publisher"
           manifest="$GITHUB_WORKSPACE/server.json"
@@ -273,19 +468,18 @@ jobs:
             --arg remote "$remote_url" \
             '.name == $name and .title == $title and .version == $version and (.remotes | length) == 1 and .remotes[0].type == "streamable-http" and .remotes[0].url == $remote and (.packages | not)' \
             "$manifest" >/dev/null
-          # These staged files are public artifacts, not credentials. Hosted-runner
-          # files belong to a non-root UID; container root with cap-drop=ALL
-          # needs ordinary read/execute permission on this read-only mount.
+
           mkdir -m 755 "$stage"
           mkdir -m 700 "$stage/.config"
           install -m 555 "$publisher" "$stage/mcp-publisher"
           install -m 444 "$manifest" "$stage/server.json"
-          runner_ca_bundle="/etc/ssl/certs/ca-certificates.crt"
-          if [[ ! -r "$runner_ca_bundle" || ! -s "$runner_ca_bundle" ]]; then
-            echo "::error::GitHub-hosted runner system CA bundle is missing, unreadable, or empty; stopping before Registry OIDC login."
+          if [[ ! -r "$RUNNER_CA_BUNDLE" || ! -s "$RUNNER_CA_BUNDLE" ]]; then
+            echo "::error::The trusted host CA bundle is missing, unreadable, or empty; stopping before Registry OIDC login."
             exit 1
           fi
+
           docker run --rm \
+            --platform linux/amd64 \
             --read-only \
             --cap-drop=ALL \
             --security-opt=no-new-privileges:true \
@@ -293,13 +487,13 @@ jobs:
             --tmpfs /tmp:rw,nosuid,nodev,noexec,size=16m \
             --workdir /tmp \
             --mount "type=bind,src=$stage,dst=/root,readonly" \
-            --mount "type=bind,src=$runner_ca_bundle,dst=/etc/ssl/certs/ca-certificates.crt,readonly" \
+            --mount "type=bind,src=$RUNNER_CA_BUNDLE,dst=/etc/ssl/certs/ca-certificates.crt,readonly" \
             --env SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
             --env ACTIONS_ID_TOKEN_REQUEST_URL \
             --env ACTIONS_ID_TOKEN_REQUEST_TOKEN \
             --entrypoint /bin/sh \
             node:24.21.0-bookworm-slim@sha256:5cbc7caba8c2c0f0bca675d1b61b9f2857e1cf1853c6164ee9dd409501a936e7 \
-            -c 'set -eu; /root/mcp-publisher validate /root/server.json; /root/mcp-publisher login github-oidc; /root/mcp-publisher publish /root/server.json'
+            -c 'set -eu; /root/mcp-publisher --version; /root/mcp-publisher validate /root/server.json; /root/mcp-publisher login github-oidc; /root/mcp-publisher publish /root/server.json'
 
           server_name_encoded="io.github.hardtab%2Fsupercheap-shopping"
           registry_detail="$RUNNER_TEMP/mcp-registry-server-detail.json"
@@ -342,5 +536,9 @@ jobs:
           rm -rf -- \
             "$RUNNER_TEMP/mcp-publisher-bin" \
             "$RUNNER_TEMP/mcp-publisher-stage" \
+            "$RUNNER_TEMP/mcp-registry-validate-stage" \
+            "$RUNNER_TEMP/mcp-registry-publisher-validate"
+          rm -f -- \
             "$RUNNER_TEMP/mcp-publisher-v1.8.1-linux-amd64.tar.gz" \
+            "$RUNNER_TEMP/mcp-registry-runner-ca-bundle.pem" \
             "$RUNNER_TEMP/mcp-registry-server-detail.json"
