@@ -1,49 +1,40 @@
-# SuperCheap MCP Registry metadata
+# SuperCheap MCP
 
-Public metadata for the published `io.github.hardtab/supercheap-shopping` entry, version `0.1.0`.
+SuperCheap lets an AI assistant search products for a supported market, review product details and variants, manage a customer cart, quote selected cart lines, and prepare a hosted checkout.
+
+This repository contains the public MCP Registry manifest and the protected Registry publisher workflow. The server implementation and customer data are maintained in the SuperCheap backend.
 
 - Website: https://supercheap.market/
-- Remote endpoint: https://supercheap.market/mcp (Streamable HTTP, customer OAuth required)
+- MCP endpoint: https://supercheap.market/mcp
 - Connection guide: https://supercheap.market/us-en/use-supercheap-with-ai/
 - Support: https://supercheap.market/support/ · support@supercheap.market
 
-## Status
+## Connect an AI assistant
 
-Version `0.1.0` is published in the [Official MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.hardtab%2Fsupercheap-shopping/versions/0.1.0). A direct lookup on 8 October 2026 returned the exact namespace and version with `status=active`, `isLatest=true`, and the Streamable HTTP endpoint `https://supercheap.market/mcp`. This repository contains public Registry metadata and publisher workflows; it contains no server implementation, customer data, reviewer fixtures or long-lived credentials.
+1. In an AI client that supports remote MCP servers, add a remote server or connector.
+2. Select Streamable HTTP if the client asks for a transport, and enter `https://supercheap.market/mcp`.
+3. Complete the SuperCheap OAuth sign-in in the browser and approve the customer access requested by the client. Use the SuperCheap customer account you want the assistant to access.
+4. Ask the assistant to search for products in a supported market. It can inspect full product details before choosing variants and adding them to the cart.
 
-## Backend release evidence — 8 October 2026
+No API key is needed. The endpoint uses customer OAuth. Client menus differ; use the connection guide for the current client-specific steps. Review the delivery method and total on SuperCheap before paying.
 
-[Fast release 37712311854](https://github.com/hardtab/supercheap-backend/actions/runs/37712311854) recorded backend acceptance for source `9427574c653d8939101cac7ac3ed6146b5e9a0eb` and image `sha256:5c8c55f13e8da037ee63d0a2ab74470e98359f4bccc13da54388ab094609f365`. The long `quality` and Yandex watcher checks were skipped, so this is not a full-CI pass. A later public readiness request timed out; this dated acceptance record does not establish current runtime health or availability.
+## Current verification — 14 October 2026
 
-## Directory listings and client evidence — 8 October 2026
+- **Official MCP Registry:** a fresh lookup returned `io.github.hardtab/supercheap-shopping`, version `0.1.0`, with `status=active` and `isLatest=true`. Its declared Streamable HTTP endpoint is `https://supercheap.market/mcp`.
+- **Customer tools:** the live Smithery and Glama cards each report 35 tools. Glama currently labels the connector `Healthy` and `Works in Glama`. These are directory discovery and health signals, not proof that a buyer completed checkout through either directory.
+- **Direct MCP checkout:** an existing customer connection quoted and prepared only selected cart lines, created a hosted Stripe checkout link, and a later status read returned `pending-payment`. Another cart line remained in the cart. No payment was made. This verifies that path on the existing connection; it does not establish directory buyer acceptance.
+- **Other public directories:** [mcpservers.org](https://mcpservers.org/servers/hardtab/supercheap-mcp) has a public card. MCPI has an owner-published 35-tool metadata snapshot dated 8 October; that snapshot is not buyer acceptance. MCP Market acknowledged a free-queue submission, but its public listing was not found in the 8 October search. PulseMCP said on 14 October that submissions and listing changes are paused; no SuperCheap card was found. Arcade acknowledged its Early Access interest form, but beta acceptance and a public Arcade listing are unconfirmed.
+- **AI marketplaces:** this repository does not establish OpenAI or Claude publication. No public OpenAI or Claude listing is claimed here.
 
-- [Official MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.hardtab%2Fsupercheap-shopping/versions/0.1.0) — version `0.1.0`, `active` and `isLatest` on the 8 October direct lookup.
-- [mcpservers.org](https://mcpservers.org/servers/hardtab/supercheap-mcp) — public SuperCheap card with the customer OAuth endpoint and Registry metadata.
-- [Smithery](https://smithery.ai/servers/hardtab/supercheap-shopping) — its 7 October authenticated scan succeeded and the listing reports 35 tools. This verifies tool discovery, not the full buyer checkout.
-- [Glama](https://glama.ai/mcp/connectors/io.github.hardtab/supercheap-shopping) — the public listing reports 35 tools. In an Inspector test on 8 October, a selected-line quote and `checkout_prepare_payment` succeeded while an unselected cart line remained. No order, Stripe payment link or charge was created. A later Test Profile check at 18:06:29 failed with `OAuth access token has expired`; a refresh-token exchange and a current authenticated SuperCheap Inspector connection are not confirmed.
-- [MCPI](https://mcpi.app/servers/supercheap) — the public card received a 35-tool customer metadata snapshot on 8 October. The temporary publication key was revoked. The snapshot is metadata publication, not buyer acceptance.
+A Registry record or directory card only helps users find the server. It does not prove that a client authorizes OAuth, completes a shopping flow, or publishes SuperCheap in an AI marketplace.
 
-Glama's successful Inspector actions establish only the selected-line quote and payment-preparation behavior for that test. They do not establish current OAuth connectivity, refresh, order creation, or Stripe payment-link creation.
+## Registry publisher workflow
 
-## Other directory intake — 8 October 2026
+The publisher workflow is manually dispatched from `main`. `validate` is the default and runs without Registry publisher credentials. Publishing requires choosing `operation=publish`, setting `confirm_publish=true`, and passing the protected `mcp-registry-publish` environment review. Before a publish dispatch, verify that the environment still requires a human reviewer, permits only `main`, and has administrator bypass disabled. The reviewer should inspect the exact run, manifest, and workflow before approving it.
 
-- MCP Market: the existing repository-mode submission receipt confirmed entry into its free queue, but the [public search](https://mcpmarket.com/search?q=SuperCheap) currently has no exact SuperCheap card. Queue position/status has not been independently read since submission. Its current GitHub-repository submission page offers a $0 Free Queue (average 4–6 weeks) and a $29 one-time expedited option. An earlier 7 October observation recorded $69 for the separate Remote MCP mode; that mode was not selected in the 8 October recheck, so its current price is unconfirmed. No payment was made or approved.
-- PulseMCP: the [public search](https://www.pulsemcp.com/servers?q=supercheap) returns no results and says submissions and listing changes are paused. No import of this Registry entry is confirmed.
-- Arcade: an Early Access interest survey was acknowledged; no beta acceptance or public Arcade listing is confirmed.
-
-## Protected publication
-
-Environment configuration was verified on 1 October 2026: required human reviewer, exactly the `main` branch allowed, and administrator bypass disabled. [Publication run 36811212516](https://github.com/hardtab/supercheap-mcp/actions/runs/36811212516) used exact metadata revision `7caa540794754e83afccb4767207da994d79c42a`; after manual approval, it failed at CLI manifest validation before requesting an OIDC identity because the pinned container lacked trusted system CA roots for Registry TLS. The workflow update binds only the GitHub-hosted runner's trusted system CA bundle read-only into the pinned container and sets `SSL_CERT_FILE`. The [validation-only run 36818178152](https://github.com/hardtab/supercheap-mcp/actions/runs/36818178152) passed on the repaired revision. The subsequent protected publication run 36818380344 succeeded after human review. The earlier failed run did not publish a listing.
-
-The workflow runs only by manual dispatch from `main` in this exact repository on the self-hosted `hardtab-docker-ci` runner pool. `operation` defaults to `validate`, which does not receive OIDC permission or publisher credentials. Publication requires selecting `operation=publish`, setting `confirm_publish=true`, and approval by the protected `mcp-registry-publish` environment. Before each dispatch, verify that the environment still requires a human reviewer, allows exactly the `main` branch, and has administrator bypass disabled. The reviewer must inspect that exact run, manifest and workflow before approval. Automation must never approve or bypass its own deployment. A sole owner may manually approve their own dispatch; independent-review prevention is optional additional protection.
-
-Review changes through pull requests before merging to `main`. The GitHub OIDC publisher permission covers `io.github.hardtab/*`, so the exact repository, branch, manifest and approval controls are significant.
-
-The self-hosted runner checks the environment and public customer-only OAuth/readiness boundary before requesting a short-lived Registry identity. The official Registry publisher is checksum-pinned; its runtime image is digest-pinned and runs as `linux/amd64`. Public artifacts and the runner's trusted system CA bundle are mounted read-only; the workflow stops before OIDC login if the bundle is missing, unreadable, or empty. CLI credentials exist only in root-owned tmpfs inside a disposable container. No publisher token, PAT or signing key belongs in this repository.
-
-After publication, the workflow verifies the final official HTTPS Registry origin/version path and the exact declared remote set, title and website. That lookup proves listing publication only. Verify OAuth, buyer tools, refresh and revocation independently in each supported client before claiming client acceptance.
+The workflow checks the live customer-only OAuth boundary, then uses the official Registry publisher with a short-lived GitHub OIDC identity. It verifies the exact namespace, version, endpoint, title, and website after publication. That check proves Registry publication only; OAuth, shopping, refresh, and revocation need separate verification in each client.
 
 ## Files
 
-- `server.json`: published public Registry manifest.
-- `.github/workflows/registry-operations.yml`: one manual workflow. Choose `validate` (the default) for unauthenticated validation, or choose `publish` and confirm explicitly to request reviewer-gated publication.
+- `server.json`: public Official MCP Registry manifest.
+- `.github/workflows/registry-operations.yml`: manual validation and reviewer-gated publication workflow.
