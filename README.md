@@ -18,11 +18,11 @@ This repository contains the public MCP Registry manifest and the protected Regi
 
 No API key is needed. The endpoint uses customer OAuth. Client menus differ; use the connection guide for the current client-specific steps. Review the delivery method and total on SuperCheap before paying.
 
-## Current verification — 14 October 2026
+## Current verification — 15 October 2026
 
 - **Official MCP Registry:** a fresh lookup returned `io.github.hardtab/supercheap-shopping`, version `0.1.0`, with `status=active` and `isLatest=true`. Its declared Streamable HTTP endpoint is `https://supercheap.market/mcp`.
 - **Customer tools:** the live Smithery and Glama cards each report 35 tools. Glama currently labels the connector `Healthy` and `Works in Glama`. These are directory discovery and health signals, not proof that a buyer completed checkout through either directory.
-- **Direct MCP checkout:** an existing customer connection quoted and prepared only selected cart lines, created a hosted Stripe checkout link, and a later status read returned `pending-payment`. Another cart line remained in the cart. No payment was made. This verifies that path on the existing connection; it does not establish directory buyer acceptance.
+- **Smithery customer checkout:** the existing authorized Smithery connection resolved a saved product variant, quoted and prepared only the selected cart line, and created a hosted Stripe checkout link. A read through the same connection confirmed `pending-payment`; both original cart lines remained in the cart. The Stripe-hosted page displayed SuperCheap and the quoted THB total. No payment was made. This verifies the selected-line checkout path through that connection, not a completed purchase or every client lifecycle scenario. Fresh supplier-preview hydration and Glama checkout remain unverified.
 - **Other public directories:** [mcpservers.org](https://mcpservers.org/servers/hardtab/supercheap-mcp) has a public card. MCPI has an owner-published 35-tool metadata snapshot dated 8 October; that snapshot is not buyer acceptance. MCP Market acknowledged a free-queue submission, but its public listing was not found in the 8 October search. PulseMCP said on 14 October that submissions and listing changes are paused; no SuperCheap card was found. Arcade acknowledged its Early Access interest form, but beta acceptance and a public Arcade listing are unconfirmed.
 - **AI marketplaces:** this repository does not establish OpenAI or Claude publication. No public OpenAI or Claude listing is claimed here.
 
