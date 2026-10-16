@@ -254,7 +254,7 @@ jobs:
 
           BASE = "https://supercheap.market"
           ALLOWED_HOSTS = {"supercheap.market", "api.supercheap.market"}
-          EXPECTED_SCOPES = sorted([
+          EXPECTED_CUSTOMER_SCOPES = [
               "catalog:read",
               "cart:read",
               "cart:write",
@@ -266,7 +266,39 @@ jobs:
               "profile:write",
               "support:read",
               "support:write",
-          ])
+          ]
+          EXPECTED_STAFF_SCOPES = [
+              "staff:support:read",
+              "staff:support:write",
+              "staff:orders:read",
+              "staff:orders:write",
+              "staff:customers:read",
+              "staff:audit:read",
+              "staff:taxonomy:read",
+              "staff:taxonomy:write",
+              "staff:influencers:read",
+              "staff:influencers:write",
+              "staff:influencers:orders:read",
+              "staff:influencers:balance-gifts:write",
+              "staff:influencers:discovery:read",
+              "staff:influencers:discovery:write",
+              "staff:influencers:review:read",
+              "staff:influencers:review:write",
+              "staff:influencers:finance:read",
+              "staff:influencers:finance:write",
+              "staff:influencers:finance:correct",
+              "staff:influencers:outreach:read",
+              "staff:influencers:outreach:write",
+          ]
+
+          def require_exact_scopes(metadata, expected, description):
+              scopes = metadata.get("scopes_supported")
+              if not isinstance(scopes, list) or any(
+                  not isinstance(scope, str) for scope in scopes
+              ):
+                  raise RuntimeError(f"{description} did not provide a string scope list")
+              if len(scopes) != len(set(scopes)) or sorted(scopes) != sorted(expected):
+                  raise RuntimeError(f"{description} did not advertise the expected scopes exactly once")
 
           def get(url, expected_status):
               request = urllib.request.Request(
@@ -324,11 +356,9 @@ jobs:
               raise RuntimeError("The MCP aliases did not advertise the same OAuth resource metadata")
 
           protected = json_get(challenges[0])
-          scopes = protected.get("scopes_supported")
-          if not isinstance(scopes, list) or sorted(scopes) != EXPECTED_SCOPES or len(scopes) != len(set(scopes)):
-              raise RuntimeError("Protected-resource metadata did not advertise exactly the customer MCP scopes")
-          if any(not isinstance(scope, str) or scope.startswith("staff:") for scope in scopes):
-              raise RuntimeError("Protected-resource metadata exposed a staff scope")
+          require_exact_scopes(
+              protected, EXPECTED_CUSTOMER_SCOPES, "Customer protected-resource metadata"
+          )
 
           authorization_servers = protected.get("authorization_servers")
           if not isinstance(authorization_servers, list) or len(authorization_servers) != 1:
@@ -347,20 +377,28 @@ jobs:
           if protected.get("resource") != expected_resource:
               raise RuntimeError("Protected-resource metadata did not describe the canonical MCP resource")
 
+          staff_metadata_path = "/.well-known/oauth-protected-resource/api/v1/mcp/staff"
+          staff_protected = json_get(f"{authorization_origin.rstrip('/')}{staff_metadata_path}")
+          require_exact_scopes(
+              staff_protected, EXPECTED_STAFF_SCOPES, "Staff protected-resource metadata"
+          )
+          if staff_protected.get("authorization_servers") != [authorization_origin]:
+              raise RuntimeError("Staff protected-resource metadata did not use the shared authorization server")
+          expected_staff_resource = f"{authorization_origin.rstrip('/')}/api/v1/mcp/staff"
+          if staff_protected.get("resource") != expected_staff_resource:
+              raise RuntimeError("Staff protected-resource metadata did not describe the canonical staff MCP resource")
+
           authorization = json_get(f"{authorization_origin.rstrip('/')}/.well-known/oauth-authorization-server")
-          authorization_scopes = authorization.get("scopes_supported")
-          if (
-              not isinstance(authorization_scopes, list)
-              or sorted(authorization_scopes) != EXPECTED_SCOPES
-              or len(authorization_scopes) != len(set(authorization_scopes))
-          ):
-              raise RuntimeError("Authorization-server metadata did not advertise exactly the customer MCP scopes")
+          expected_authorization_scopes = EXPECTED_CUSTOMER_SCOPES + EXPECTED_STAFF_SCOPES
+          require_exact_scopes(
+              authorization, expected_authorization_scopes, "Shared authorization-server metadata"
+          )
           if not {"authorization_code", "refresh_token"}.issubset(set(authorization.get("grant_types_supported", []))):
               raise RuntimeError("Authorization-server metadata omitted a supported customer OAuth grant")
           if "S256" not in authorization.get("code_challenge_methods_supported", []):
               raise RuntimeError("Authorization-server metadata omitted PKCE S256")
 
-          print("Live readiness, OAuth metadata, customer-only scopes, and protected MCP aliases passed.")
+          print("Live readiness, customer/staff OAuth scopes, and protected MCP boundaries passed.")
           PY
 
       - name: Download and verify pinned Registry publisher
