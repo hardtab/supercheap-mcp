@@ -12,7 +12,7 @@ on:
           - publish
         default: validate
       confirm_publish:
-        description: Confirm publication of io.github.hardtab/supercheap-shopping 0.1.0
+        description: Confirm publication of io.github.hardtab/supercheap-shopping 0.1.1
         required: true
         type: boolean
         default: false
@@ -496,7 +496,7 @@ jobs:
           stage="$RUNNER_TEMP/mcp-publisher-stage"
           server_name="io.github.hardtab/supercheap-shopping"
           title="SuperCheap"
-          version="0.1.0"
+          version="0.1.1"
           remote_url="https://supercheap.market/mcp"
 
           jq --exit-status \
