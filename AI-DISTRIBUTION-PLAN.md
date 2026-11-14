@@ -4,9 +4,15 @@
 Codex и др.) через все основные MCP-директории и каналы обнаружения, чтобы
 пользователям было проще найти SuperCheap и начать с ним работать.
 
+**Current Official MCP Registry readback — 14 November 2026:**
+`io.github.hardtab/supercheap-shopping` version `0.1.1` is active and latest.
+[Published version 0.1.1](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.hardtab%2Fsupercheap-shopping/versions/0.1.1)
+uses the concise listing description: “AI shopping assistant: find and compare
+SuperCheap products, manage your cart, get checkout quotes.”
+
 ---
 
-## 1. Состояние на 3 октября 2026
+## 1. Историческое состояние на 3 октября 2026
 
 | Канал | Статус | Детали |
 |---|---|---|
@@ -27,7 +33,7 @@ Codex и др.) через все основные MCP-директории и �
 
 **Статус:** ✅ Опубликовано
 
-**URL:** https://registry.modelcontextprotocol.io/v0.1/servers/io.github.hardtab%2Fsupercheap-shopping/versions/0.1.0
+**URL:** https://registry.modelcontextprotocol.io/v0.1/servers/io.github.hardtab%2Fsupercheap-shopping/versions/0.1.1
 
 **Репозиторий:** hardtab/supercheap-mcp
 
