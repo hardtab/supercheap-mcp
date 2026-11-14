@@ -5,19 +5,19 @@
   "registryDescription": "AI shopping assistant: find and compare SuperCheap products, manage your cart, get checkout quotes.",
   "locales": {
     "ar-SA": {
-      "subtitle": "مساعد تسوق وبحث عن المنتجات",
+      "subtitle": "بحث ومقارنة المنتجات",
       "description": "استخدم خادم MCP من SuperCheap كمساعد تسوق بالذكاء الاصطناعي. ابحث في كتالوج سوق SuperCheap المباشر للسوق الذي تختاره، وقارن المنتجات وتفاصيلها وخياراتها، وأدر المفضلة وسلة التسوق، واطلب عرضًا محدثًا للتوصيل وإتمام الطلب. اربط حسابك كمشتري في SuperCheap عبر OAuth. تختلف المنتجات المتاحة وخيارات التوصيل والأسعار حسب السوق وقد تتغير قبل إتمام الطلب. راجع المبلغ النهائي وأكمل الدفع على صفحة Stripe المستضافة؛ لا تتم معالجة الدفع داخل ChatGPT."
     },
     "de-DE": {
-      "subtitle": "KI-Shopping & Produktsuche",
+      "subtitle": "Produkte suchen & vergleichen",
       "description": "Nutze den SuperCheap-MCP-Server als KI-Shopping-Assistenten. Durchsuche den aktuellen SuperCheap-Marktplatz für deinen ausgewählten Markt, vergleiche Produkte, Details und Varianten, verwalte Merkliste und Warenkorb und rufe ein aktuelles Liefer- und Checkout-Angebot ab. Verbinde dein SuperCheap-Kundenkonto per OAuth. Verfügbare Produkte, Lieferoptionen und Preise hängen vom Markt ab und können sich vor dem Checkout ändern. Prüfe den Endbetrag und schließe die Zahlung auf der gehosteten Stripe-Checkout-Seite ab; die Zahlung wird nicht in ChatGPT verarbeitet."
     },
     "en-US": {
-      "subtitle": "AI shopping & product search",
+      "subtitle": "AI shopping assistant",
       "description": "Use the SuperCheap MCP server as your AI shopping assistant. Search the live SuperCheap marketplace catalog for your selected market, compare products, details and variants, manage favorites and your shopping cart, and request a current delivery and checkout quote. Connect your SuperCheap customer account with OAuth. Available products, delivery options and prices depend on your market and can change before checkout. Review the final amount and complete payment on the hosted Stripe checkout page; payment is not processed inside ChatGPT."
     },
     "es-ES": {
-      "subtitle": "Búsqueda y compras con IA",
+      "subtitle": "Buscar y comparar productos",
       "description": "Usa el servidor MCP de SuperCheap como asistente de compras con IA. Busca en el catálogo en tiempo real del mercado que hayas elegido, compara productos, detalles y variantes, gestiona tus favoritos y el carrito, y solicita una cotización actual del envío y del pedido. Conecta tu cuenta de cliente SuperCheap mediante OAuth. Los productos disponibles, las opciones de envío y los precios dependen del mercado y pueden cambiar antes de finalizar la compra. Revisa el importe final y completa el pago en la página alojada de Stripe; el pago no se procesa dentro de ChatGPT."
     },
     "fr-FR": {
@@ -25,31 +25,31 @@
       "description": "Utilisez le serveur MCP SuperCheap comme assistant shopping avec IA. Recherchez dans le catalogue en direct du marché choisi, comparez les produits, leurs caractéristiques et leurs variantes, gérez vos favoris et votre panier, puis demandez un devis à jour pour la livraison et la commande. Connectez votre compte client SuperCheap avec OAuth. Les produits disponibles, les options de livraison et les prix dépendent du marché et peuvent changer avant la commande. Vérifiez le montant final et effectuez le paiement sur la page de paiement Stripe hébergée ; le paiement n'est pas traité dans ChatGPT."
     },
     "hi-IN": {
-      "subtitle": "AI शॉपिंग और उत्पाद खोज",
+      "subtitle": "AI शॉपिंग असिस्टेंट",
       "description": "SuperCheap के MCP सर्वर को अपना AI शॉपिंग सहायक बनाएं। चुने हुए बाज़ार के लाइव SuperCheap marketplace catalog में उत्पाद खोजें, उत्पादों के विवरण और variants की तुलना करें, favorites और shopping cart प्रबंधित करें, और delivery तथा checkout का मौजूदा quote मांगें। OAuth के जरिए अपने SuperCheap ग्राहक खाते को connect करें। उपलब्ध उत्पाद, delivery विकल्प और कीमतें बाज़ार पर निर्भर करती हैं और checkout से पहले बदल सकती हैं। अंतिम राशि देखकर hosted Stripe checkout page पर भुगतान पूरा करें; ChatGPT के भीतर भुगतान संसाधित नहीं होता।"
     },
     "id-ID": {
-      "subtitle": "Belanja AI & cari produk",
+      "subtitle": "Cari produk di katalog",
       "description": "Gunakan server MCP SuperCheap sebagai asisten belanja AI. Cari produk di katalog marketplace SuperCheap yang aktif untuk pasar pilihan Anda, bandingkan detail dan varian produk, kelola favorit dan keranjang belanja, lalu minta penawaran ongkir dan checkout terkini. Hubungkan akun pelanggan SuperCheap Anda melalui OAuth. Produk, opsi pengiriman, dan harga yang tersedia bergantung pada pasar dan dapat berubah sebelum checkout. Periksa jumlah akhir dan selesaikan pembayaran di halaman checkout Stripe yang dihosting; pembayaran tidak diproses di dalam ChatGPT."
     },
     "ja-JP": {
-      "subtitle": "AI商品検索・ショッピング",
+      "subtitle": "商品検索・比較",
       "description": "SuperCheapのMCPサーバーをAIショッピングアシスタントとして利用できます。選択した市場のSuperCheapマーケットプレイスの最新カタログから商品を検索し、商品情報やバリエーションを比較し、お気に入りやショッピングカートを管理して、最新の配送・チェックアウト見積もりを取得できます。OAuthでSuperCheapの顧客アカウントに接続します。購入できる商品、配送方法、価格は市場によって異なり、チェックアウト前に変更される場合があります。最終金額を確認し、ホストされたStripeのチェックアウトページでお支払いください。ChatGPT内では決済されません。"
     },
     "ko-KR": {
-      "subtitle": "AI 쇼핑 및 상품 검색",
+      "subtitle": "상품 검색 및 비교",
       "description": "SuperCheap MCP 서버를 AI 쇼핑 어시스턴트로 사용하세요. 선택한 시장의 SuperCheap 마켓플레이스 실시간 카탈로그에서 상품을 검색하고, 상품 정보와 옵션을 비교하고, 즐겨찾기와 장바구니를 관리하고, 최신 배송 및 체크아웃 견적을 요청할 수 있습니다. OAuth로 SuperCheap 고객 계정을 연결하세요. 이용 가능한 상품, 배송 옵션 및 가격은 시장에 따라 다르며 체크아웃 전에 변경될 수 있습니다. 최종 금액을 확인한 뒤 호스팅된 Stripe 체크아웃 페이지에서 결제하세요. ChatGPT 안에서는 결제가 처리되지 않습니다."
     },
     "pt-BR": {
-      "subtitle": "Busca e compras com IA",
+      "subtitle": "Buscar e comparar produtos",
       "description": "Use o servidor MCP da SuperCheap como assistente de compras com IA. Pesquise no catálogo ao vivo do marketplace SuperCheap para o mercado escolhido, compare produtos, detalhes e variantes, gerencie favoritos e carrinho de compras e solicite uma cotação atual de entrega e checkout. Conecte sua conta de cliente SuperCheap por OAuth. Os produtos disponíveis, as opções de entrega e os preços dependem do mercado e podem mudar antes da finalização da compra. Confira o valor final e conclua o pagamento na página hospedada do Stripe; o pagamento não é processado dentro do ChatGPT."
     },
     "ru-RU": {
-      "subtitle": "AI-помощник для поиска товаров",
+      "subtitle": "Поиск и сравнение товаров",
       "description": "Используйте MCP-сервер SuperCheap как AI-помощника для покупок. Ищите товары в актуальном каталоге маркетплейса SuperCheap для выбранного рынка, сравнивайте товары, характеристики и варианты, управляйте избранным и корзиной, запрашивайте текущий расчёт доставки и оформления заказа. Подключите аккаунт покупателя SuperCheap через OAuth. Доступные товары, способы доставки и цены зависят от рынка и могут измениться до оформления. Проверьте итоговую сумму и завершите оплату на размещённой странице Stripe; оплата не проходит внутри ChatGPT."
     },
     "th-TH": {
-      "subtitle": "AI ช้อปปิ้งและค้นหาสินค้า",
+      "subtitle": "ค้นหาและเปรียบเทียบสินค้า",
       "description": "ใช้ MCP server ของ SuperCheap เป็นผู้ช่วยช้อปปิ้ง AI ค้นหาสินค้าในแคตตาล็อก marketplace ของ SuperCheap สำหรับตลาดที่เลือก เปรียบเทียบสินค้า รายละเอียด และตัวเลือกสินค้า จัดการรายการโปรดและรถเข็น และขอใบเสนอราคาค่าจัดส่งและการชำระเงินล่าสุด เชื่อมต่อบัญชีลูกค้า SuperCheap ผ่าน OAuth สินค้าที่มีจำหน่าย ตัวเลือกการจัดส่ง และราคาขึ้นอยู่กับตลาดและอาจเปลี่ยนแปลงก่อนชำระเงิน ตรวจสอบยอดรวมสุดท้ายและชำระเงินบนหน้า Stripe checkout ที่โฮสต์ไว้ ระบบไม่ได้ประมวลผลการชำระเงินภายใน ChatGPT"
     }
   }
